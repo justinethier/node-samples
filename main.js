@@ -38,7 +38,12 @@ http.createServer(function (req, res) {
       res.setHeader('Content-Type', 'text/plain');
       res.end("Error");
     } else {
-      fs.readFile("./templates/" + action.template, function(err, template){
+      fs.readFile("./templates/" + action.template, 'utf8', function(err, template){
+          if (err){
+              res.setHeader('Content-Type', 'text/html');
+              res.statusCode = 500;
+              res.end(err + "\n");
+          }
           res.statusCode = 200;
           res.setHeader('Content-Type', 'text/html');
           res.end(Mustache.to_html(template, action.view));
