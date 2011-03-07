@@ -1,0 +1,8 @@
+mkdir node-samples
+  cd node-samples
+    git init
+      touch README
+        git add README
+          git commit -m 'first commit'
+            git remote add origin git@github.com:justinethier/node-samples.git
+              git push -u origin master
