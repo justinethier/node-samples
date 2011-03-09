@@ -23,17 +23,33 @@
 fs = require('fs');
 jQuery = require('jquery');
 
-var files = fs.readdirSync('.');
+var files = fs.readdirSync('data/tmp'); // .
 jQuery.each(files, function(index, filename){
+    filename = 'data/tmp/' + filename;
     if (filename.substr(filename.length-4, 4) == ".xml") {
         data = fs.readFileSync(filename, 'utf-8');
+console.log(filename);
+        var stationRe = new RegExp("<station_id>(.*)</station_id>"),
+            stationAr = stationRe.exec(data),
+            locRe = new RegExp("<location>(.*)</location>"),
+            locAr = locRe.exec(data),
+            latRe = new RegExp("<latitude>(.*)</latitude>"),
+            latAr = latRe.exec(data),
+            longRe = new RegExp("<longitude>(.*)</longitude>"),
+            longAr = longRe.exec(data);
+
         var dataRow = {
-            station : jQuery("station_id", data).text(), 
+            station : stationAr[1] || "",
+            location : (locAr != null && locAr.length > 1 ? locAr[1] : ""),
+            // TODO: filter out if null?
+            latitude :  (latAr != null && latAr.length > 1 ? latAr[1] : 0), 
+            longitude : (latAr != null && longAr.length > 1 ? longAr[1] : 0)
+/*            station : jQuery("station_id", data).text(), 
             location : jQuery("location", data).text(), 
             suggested_pickup : jQuery("suggested_pickup", data).text(), 
             suggested_pickup_period : jQuery("suggested_pickup_period", data).text(), 
             latitude : jQuery("latitude", data).text(),
-            longitude : jQuery("longitude", data).text()
+            longitude : jQuery("longitude", data).text()*/
         };
         
         console.log(JSON.stringify(dataRow));
