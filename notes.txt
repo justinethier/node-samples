@@ -1,0 +1,7 @@
+weather stations
+can get NOAA data from: http://weather.noaa.gov/tg/site.shtml
+
+TODO: use all.zip to generate a list of stations. filter the list by recent updates (remove ones w/last update time of 2009 for example)
+      this file would be similar to station-locations.csv
+      then, need to annotate this file (or create a new one) that stamps a zip code on each station
+      if node a good tool for any of this?
