@@ -9,6 +9,16 @@
  * the all_xml.zip file obtained from NOAA:
  *
  * http://www.weather.gov/xml/current_obs/all_xml.zip
+ *
+ *
+ *
+ * TODO: need to integrate this with ZIP Code data ( http://zips.sourceforge.net/ )
+ *       and a nearest neighbor search to tag each station with a zip code.
+ *
+ *       ideally it would be nice if there was a high-speed nearest neighbor
+ *       algorithm we could tie into, written in either C or python.
+ *       it would be nice to keep it in JS, but that might not be practical
+ *       in terms of speed.
  */ 
 fs = require('fs');
 jQuery = require('jquery');
