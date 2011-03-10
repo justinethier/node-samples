@@ -5,3 +5,5 @@ TODO: use all.zip to generate a list of stations. filter the list by recent upda
       this file would be similar to station-locations.csv
       then, need to annotate this file (or create a new one) that stamps a zip code on each station
       if node a good tool for any of this?
+
+kd tree:        http://stackoverflow.com/questions/253767/kdtree-implementation-in-java
