@@ -1,0 +1,6 @@
+Using examples from these links, create a skeleton addon project:
+ https://github.com/ry/node_postgres
+ http://nodejs.org/docs/v0.4.2/api/addons.html
+
+Grab kdtree code from ( http://code.google.com/p/kdtree/ ), and compile it.
+Try to create a simple addon that includes the kdtree code. Can even just be the hello one at first, but get it to compile and work.
