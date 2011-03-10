@@ -7,3 +7,5 @@ TODO: use all.zip to generate a list of stations. filter the list by recent upda
       if node a good tool for any of this?
 
 kd tree:        http://stackoverflow.com/questions/253767/kdtree-implementation-in-java
+and a C implementation here - http://code.google.com/p/kdtree/
+perhaps try and see if C code can be compiled into a node addon somehow... if so, this would be its own project
