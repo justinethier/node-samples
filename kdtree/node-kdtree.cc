@@ -40,7 +40,7 @@ int test()
 //   printf("%.3f sec\n", (float)msec / 1000.0);
 
 //   start = get_msec();
-   set = kd_nearest_range3(kd, 0, 0, 0, 40);
+   set = kd_nearest_range3(kd, 0, 0, 0, 100);
 //   msec = get_msec() - start;
 //
    i = kd_res_size(set);
