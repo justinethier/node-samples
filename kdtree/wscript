@@ -1,3 +1,7 @@
+# Before this will work, libkdtree needs to be installed:
+#
+# make install PREFIX=/usr
+#
 srcdir = '.'
 blddir = 'build'
 VERSION = '0.0.1'
