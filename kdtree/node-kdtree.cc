@@ -8,9 +8,9 @@
 
 using namespace v8;
 using namespace node;
-static Persistent<String> test_symbol;
+//static Persistent<String> test_symbol;
 
-class KDTree : public EventEmitter {
+class KDTree : public ObjectWrap {
   public:
     static void
     Initialize (v8::Handle<v8::Object> target){
@@ -18,10 +18,11 @@ class KDTree : public EventEmitter {
 
         Local<FunctionTemplate> t = FunctionTemplate::New(New);
 
-        t->Inherit(EventEmitter::constructor_template);
+//        t->Inherit(EventEmitter::constructor_template);
         t->InstanceTemplate()->SetInternalFieldCount(1);
+        t->SetClassName(String::NewSymbol("KDTree"));
 
-        test_symbol = NODE_PSYMBOL("test");
+//        test_symbol = NODE_PSYMBOL("test");
         NODE_SET_PROTOTYPE_METHOD(t, "test", Test);
 
         target->Set(String::NewSymbol("KDTree"), t->GetFunction());
@@ -68,14 +69,16 @@ class KDTree : public EventEmitter {
     static Handle<Value>
     New (const Arguments& args){
         HandleScope scope;
-        
+
+// TODO: an example of how to handle arguments to constructor
+//Async *async = new Async(args[0]->Int32Value(), args[1]->Int32Value());
         KDTree *kd = new KDTree();
         kd->Wrap(args.This());
 
         return args.This();
     }
 
-    KDTree () : EventEmitter (){
+    KDTree () : ObjectWrap (){
         kd_ = NULL;
 
     }
