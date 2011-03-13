@@ -36,23 +36,23 @@ class KDTree : public ObjectWrap {
 
     Handle<Value>
     Nearest(const double *pos){
-      int i = 0, rpos;
+      int rpos;
       char *pdata;
       kdres *results = kd_nearest(kd_, pos);
       Local<Array> rv = Array::New(dim_ + 1);
-      double *respos = (double *)(malloc(sizeof(double) * dim_));
-      while( !kd_res_end(results)){
+
+      if (results == NULL){}
+      else{
+        double *respos = (double *)(malloc(sizeof(double) * dim_));
         pdata = (char *)kd_res_item(results, respos); 
 
         for(rpos = 0; rpos < dim_; rpos++){
-          rv->Set(rpos, Number::New(respos[rpos])); //String::New("TODO"));
+          rv->Set(rpos, Number::New(respos[rpos])); 
         }
-        // TODO: set data here
-        i++;
+       
+        free(respos);
+        kd_res_free(results);
       }
-printf("i = %d\n", i); //Debug code
-      free(respos);
-      kd_res_free(results);
       return rv;
     }
 
@@ -112,6 +112,11 @@ printf("i = %d\n", i); //Debug code
       HandleScope scope;
 
       double *pos = (double *)(malloc(sizeof(double) * args.Length()));
+      for (int i = 0; i < args.Length(); i++){
+        pos[i] = args[1]->NumberValue();
+      }
+
+      // TODO: fill pos with args
       Handle<Value> result = kd->Nearest(pos);
       free(pos);
       return result;
