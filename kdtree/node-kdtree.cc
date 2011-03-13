@@ -25,12 +25,34 @@ class KDTree : public ObjectWrap {
 //        test_symbol = NODE_PSYMBOL("test");
         NODE_SET_PROTOTYPE_METHOD(t, "test", Test);
         NODE_SET_PROTOTYPE_METHOD(t, "insert", Insert);
+        NODE_SET_PROTOTYPE_METHOD(t, "nearest", Nearest);
 
         target->Set(String::NewSymbol("KDTree"), t->GetFunction());
     }
 
     bool Insert(double x, double y, double z){
       return (kd_insert3(kd_, x, y, z, 0) == 0);
+    }
+
+    kdres *Nearest(const double *pos){
+      int i = 0, rpos;
+      char *pdata;
+      kdres *results = kd_nearest(kd_, pos);
+      Local<Array> rv = Array::New(dim_ + 1);
+      double *respos = (double *)(malloc(sizeof(double) * dim_));
+      while( !kd_res_end(results)){
+        pdata = (char *)kd_res_item(results, respos); 
+
+        for(rpos = 0; rpos < dim_; rpos++){
+          rv.Set(Number::New(i), Number::New(respos[rpos])); //String::New("TODO"));
+        }
+        // TODO: set data here
+        i++;
+      }
+printf("i = %d\n", i); //Debug code
+      free(respos);
+      kd_res_free(results);
+      return rv;
     }
 
     int Test()
@@ -84,6 +106,17 @@ class KDTree : public ObjectWrap {
     }
 
     static Handle<Value>
+    Nearest(const Arguments& args){
+      KDTree *kd = ObjectWrap::Unwrap<KDTree>(args.This());
+      HandleScope scope;
+
+      double *pos = (double *)(malloc(sizeof(double) * args.Length()));
+      Handle<Value> result = kd->Nearest(pos);
+      free(pos);
+      return result;
+    }
+
+    static Handle<Value>
     New (const Arguments& args){
         HandleScope scope;
 
@@ -103,6 +136,7 @@ class KDTree : public ObjectWrap {
 
     KDTree (int dim) : ObjectWrap (){
         kd_ = kd_create(dim);
+        dim_ = dim;
     }
 
     ~KDTree(){
@@ -124,6 +158,7 @@ class KDTree : public ObjectWrap {
 
   private:
     kdtree* kd_;
+    int dim_;
 };
 
 extern "C" void
