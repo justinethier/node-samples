@@ -24,8 +24,13 @@ class KDTree : public ObjectWrap {
 
 //        test_symbol = NODE_PSYMBOL("test");
         NODE_SET_PROTOTYPE_METHOD(t, "test", Test);
+        NODE_SET_PROTOTYPE_METHOD(t, "insert", Insert);
 
         target->Set(String::NewSymbol("KDTree"), t->GetFunction());
+    }
+
+    bool Insert(double x, double y, double z){
+      return (kd_insert3(kd_, x, y, z, 0) == 0);
     }
 
     int Test()
@@ -67,25 +72,43 @@ class KDTree : public ObjectWrap {
   protected:
 
     static Handle<Value>
+    Insert(const Arguments& args){
+        KDTree *kd = ObjectWrap::Unwrap<KDTree>(args.This());
+        HandleScope scope;
+        
+        // TODO: just calling 3 function right now
+        return Boolean::New( kd->Insert(
+          args[0]->NumberValue(),  
+          args[1]->NumberValue(),  
+          args[2]->NumberValue()));
+    }
+
+    static Handle<Value>
     New (const Arguments& args){
         HandleScope scope;
 
 // TODO: an example of how to handle arguments to constructor
 //Async *async = new Async(args[0]->Int32Value(), args[1]->Int32Value());
-        KDTree *kd = new KDTree();
+
+        int dimension = 3; // Default
+        if (args.Length() > 0){
+          dimension = args[3]->Int32Value();
+        }
+
+        KDTree *kd = new KDTree(dimension);
         kd->Wrap(args.This());
 
         return args.This();
     }
 
-    KDTree () : ObjectWrap (){
-        kd_ = NULL;
-
+    KDTree (int dim) : ObjectWrap (){
+        kd_ = kd_create(dim);
     }
 
     ~KDTree(){
-        // TODO: may be more appropriate to free up the memory here...
-        assert(kd_ == NULL);
+        if (kd_ != NULL){
+            kd_free(kd_);
+        }
     }
 
     static Handle<Value>
