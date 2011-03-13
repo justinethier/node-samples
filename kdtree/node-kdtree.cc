@@ -8,7 +8,6 @@
 
 using namespace v8;
 using namespace node;
-//static Persistent<String> test_symbol;
 
 class KDTree : public ObjectWrap {
   public:
@@ -18,22 +17,24 @@ class KDTree : public ObjectWrap {
 
         Local<FunctionTemplate> t = FunctionTemplate::New(New);
 
-//        t->Inherit(EventEmitter::constructor_template);
         t->InstanceTemplate()->SetInternalFieldCount(1);
         t->SetClassName(String::NewSymbol("KDTree"));
 
-//        test_symbol = NODE_PSYMBOL("test");
         NODE_SET_PROTOTYPE_METHOD(t, "test", Test);
         NODE_SET_PROTOTYPE_METHOD(t, "insert", Insert);
         NODE_SET_PROTOTYPE_METHOD(t, "nearest", Nearest);
+//        NODE_SET_PROTOTYPE_METHOD(t, "nearestRange", NearestRange); // kd_nearest_range
+//        NODE_SET_PROTOTYPE_METHOD(t, "clear", Clear); // kd_clear
 
         target->Set(String::NewSymbol("KDTree"), t->GetFunction());
     }
 
-    bool Insert(double x, double y, double z){
-      return (kd_insert3(kd_, x, y, z, 0) == 0);
+    // TODO: allow insertion of (string?) data
+    bool Insert(const double *pos){
+      return (kd_insert(kd_, pos, 0) == 0);
     }
 
+    // Allow retrieval of (string?) data
     Handle<Value>
     Nearest(const double *pos){
       int rpos;
@@ -98,12 +99,16 @@ class KDTree : public ObjectWrap {
     Insert(const Arguments& args){
         KDTree *kd = ObjectWrap::Unwrap<KDTree>(args.This());
         HandleScope scope;
-        
-        // TODO: just calling 3 function right now
-        return Boolean::New( kd->Insert(
-          args[0]->NumberValue(),  
-          args[1]->NumberValue(),  
-          args[2]->NumberValue()));
+
+      double *pos = (double *)(malloc(sizeof(double) * args.Length()));
+      for (int i = 0; i < args.Length(); i++){
+        pos[i] = args[i]->NumberValue();
+      }
+
+      // TODO: may want to pass Length down, so class can assert == dim_ 
+      Handle<Value> result = Boolean::New( kd->Insert(pos) );
+      free(pos);
+      return result;
     }
 
     static Handle<Value>
@@ -113,14 +118,18 @@ class KDTree : public ObjectWrap {
 
       double *pos = (double *)(malloc(sizeof(double) * args.Length()));
       for (int i = 0; i < args.Length(); i++){
-        pos[i] = args[1]->NumberValue();
+        pos[i] = args[i]->NumberValue();
       }
 
-      // TODO: fill pos with args
+      // TODO: may want to pass Length down, so class can assert == dim_ 
       Handle<Value> result = kd->Nearest(pos);
       free(pos);
       return result;
     }
+
+// TODO:
+//    static Handle<Value>
+//    NearestRange(const Arguments& args){}
 
     static Handle<Value>
     New (const Arguments& args){
@@ -146,6 +155,9 @@ class KDTree : public ObjectWrap {
     }
 
     ~KDTree(){
+      // TODO: should probably call this to clean up allocated 'data' elements
+      //       see the kdtree docs:
+//      void kd_data_destructor(struct kdtree *tree, void (*destr)(void*));
         if (kd_ != NULL){
             kd_free(kd_);
         }

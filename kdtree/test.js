@@ -11,3 +11,6 @@ console.log( tree.nearest(9, 19, 31) );
 console.log( tree.nearest(0, 0, 0) );
 console.log( tree.nearest(0.5, 2, 4) );
 console.log( tree.nearest(1, 11, 4) );
+console.log( tree.nearest(100, 11000, 4000) );
+console.log( tree.nearest(100, -11000, 4000) );
+console.log( tree.nearest(1, 0, 0) );
