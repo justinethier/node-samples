@@ -34,7 +34,8 @@ class KDTree : public ObjectWrap {
       return (kd_insert3(kd_, x, y, z, 0) == 0);
     }
 
-    kdres *Nearest(const double *pos){
+    Handle<Value>
+    Nearest(const double *pos){
       int i = 0, rpos;
       char *pdata;
       kdres *results = kd_nearest(kd_, pos);
@@ -44,7 +45,7 @@ class KDTree : public ObjectWrap {
         pdata = (char *)kd_res_item(results, respos); 
 
         for(rpos = 0; rpos < dim_; rpos++){
-          rv.Set(Number::New(i), Number::New(respos[rpos])); //String::New("TODO"));
+          rv->Set(rpos, Number::New(respos[rpos])); //String::New("TODO"));
         }
         // TODO: set data here
         i++;
