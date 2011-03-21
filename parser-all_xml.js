@@ -27,7 +27,7 @@ jQuery = require('jquery');
 var i = 0;
 var tree = new kd.KDTree(2);
 
-function loadWeatherData(){
+function loadWeatherData(zipCodeTree){
     jQuery.each(files, function(index, filename){
         filename = 'data/tmp/' + filename;
         if (filename.substr(filename.length-4, 4) == ".xml") {
@@ -40,7 +40,9 @@ function loadWeatherData(){
                 latAr = latRe.exec(data),
                 longRe = new RegExp("<longitude>(.*)</longitude>"),
                 longAr = longRe.exec(data);
-    
+
+// TODO: look up zip code and write to file
+
             var dataRow = {
                 station : stationAr[1] || "",
                 location : (locAr != null && locAr.length > 1 ? locAr[1] : ""),
@@ -67,15 +69,26 @@ function loadWeatherData(){
 }
 
 function loadZipData(){
+    var tree = new kd.KDTree(2);
     var data = fs.readFileSync("data/zips.csv", 'utf-8');
     var ary = data.split("\n");
     // for each
-        console.log(ary[1].split(","));
-        console.log( (ary[1].split(",")[3]) );
-        console.log( parseFloat((ary[1].split(",")[3])) );
-        var test = ary[1].split(",")[3];
-        console.log( parseFloat(test) );
+    jQuery.each(ary, function(index, line){
+        line = line.replace(/\"/g, "");
+        var lat = parseFloat((line.split(",")[2])),
+            lng = parseFloat((line.split(",")[3]));
+        if (!isNaN(lat) && !isNaN(lng)){
+            tree.insert( lat, lng, line.split(",")[0]);
+        }
+    });
 
+    return tree;
 }
-//loadWeatherData();
-loadZipData();
+var zip = loadZipData();
+console.log( zip.nearest(39.183038, -76.668949) );
+console.log( zip.nearest(40.690596, -74.044762) );
+console.log( zip.nearest(37.828768, -122.350616) );
+console.log( zip.nearest(0, 0) );
+
+
+loadWeatherData(zip);
