@@ -80,7 +80,6 @@ function loadWeatherData(zipCodeTree){
  */
 function createWeatherStationLookupFile(zipCodeTree){
     var i = 0;
-    var tree = new kd.KDTree(2);
     var stations = [];
     var files = fs.readdirSync('data/tmp');
 
@@ -98,8 +97,8 @@ function createWeatherStationLookupFile(zipCodeTree){
                 longAr = longRe.exec(data);
 
 
-            var lat = (latAr != null && latAr.length > 1 ? latAr[1] : 0), 
-                lng = (latAr != null && longAr.length > 1 ? longAr[1] : 0);
+            var lat = parseFloat( (latAr != null && latAr.length > 1 ? latAr[1] : 0) ), 
+                lng = parseFloat( (latAr != null && longAr.length > 1 ? longAr[1] : 0) );
 
             stations.push({
                 station : stationAr[1] || "",
@@ -115,13 +114,13 @@ function createWeatherStationLookupFile(zipCodeTree){
                 longitude : jQuery("longitude", data).text()*/
 
                 // Do not need zip code because tree searching is so fast, but write anyway to test accuracy
-                zip: tree.nearestValue(lat, lng)
+                zip: zipCodeTree.nearestValue(lat, lng)
             });
             
         }
 
-        i++;
-        if (i > 10) return false;
+//        i++;
+//        if (i > 10) return false;
     });
 
     fs.writeFile('tmp-stations.json', JSON.stringify(stations));
@@ -129,6 +128,8 @@ function createWeatherStationLookupFile(zipCodeTree){
 
 /**
  * Load zip codes from file and put them in a tree for fast searching
+ *
+ * TODO: there are some errors in the zip data. For example, zip code 207HH
  */
 function loadZipData(){
     var tree = new kd.KDTree(2);
@@ -147,10 +148,10 @@ function loadZipData(){
     return tree;
 }
 var zip = loadZipData();
-console.log( zip.nearest(39.183038, -76.668949) );
-console.log( zip.nearest(40.690596, -74.044762) );
-console.log( zip.nearest(37.828768, -122.350616) );
-console.log( zip.nearest(0, 0) );
+console.log( zip.nearestValue(39.183038, -76.668949) );
+console.log( zip.nearestValue(40.690596, -74.044762) );
+console.log( zip.nearestValue(37.828768, -122.350616) );
+console.log( zip.nearestValue(0, 0) );
 
 
 //loadWeatherData(zip);
