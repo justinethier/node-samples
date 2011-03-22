@@ -24,10 +24,17 @@ kd = require('kdtree');
 fs = require('fs');
 jQuery = require('jquery');
 
-var i = 0;
-var tree = new kd.KDTree(2);
-
+/**
+ * TODO: extract common code from the station=>file code, and 
+ *       have this function load station data into a tree, 
+ *       either using the file (probably faster) or the
+ *       same process (if it is not too slow, but it probably will be)
+ */
 function loadWeatherData(zipCodeTree){
+    var i = 0;
+    var tree = new kd.KDTree(2);
+    var stations = {};
+
     jQuery.each(files, function(index, filename){
         filename = 'data/tmp/' + filename;
         if (filename.substr(filename.length-4, 4) == ".xml") {
@@ -68,6 +75,61 @@ function loadWeatherData(zipCodeTree){
     });
 }
 
+/**
+ * Create a file to use to look up weather stations by lat/long
+ */
+function createWeatherStationLookupFile(zipCodeTree){
+    var i = 0;
+    var tree = new kd.KDTree(2);
+    var stations = [];
+    var files = fs.readdirSync('data/tmp');
+
+    jQuery.each(files, function(index, filename){
+        filename = 'data/tmp/' + filename;
+        if (filename.substr(filename.length-4, 4) == ".xml") {
+            data = fs.readFileSync(filename, 'utf-8');
+            var stationRe = new RegExp("<station_id>(.*)</station_id>"),
+                stationAr = stationRe.exec(data),
+                locRe = new RegExp("<location>(.*)</location>"),
+                locAr = locRe.exec(data),
+                latRe = new RegExp("<latitude>(.*)</latitude>"),
+                latAr = latRe.exec(data),
+                longRe = new RegExp("<longitude>(.*)</longitude>"),
+                longAr = longRe.exec(data);
+
+
+            var lat = (latAr != null && latAr.length > 1 ? latAr[1] : 0), 
+                lng = (latAr != null && longAr.length > 1 ? longAr[1] : 0);
+
+            stations.push({
+                station : stationAr[1] || "",
+                location : (locAr != null && locAr.length > 1 ? locAr[1] : ""),
+                // TODO: filter out if null?
+                latitude : lat, 
+                longitude : lng,
+    /*            station : jQuery("station_id", data).text(), 
+                location : jQuery("location", data).text(), 
+                suggested_pickup : jQuery("suggested_pickup", data).text(), 
+                suggested_pickup_period : jQuery("suggested_pickup_period", data).text(), 
+                latitude : jQuery("latitude", data).text(),
+                longitude : jQuery("longitude", data).text()*/
+
+                // Do not need zip code because tree searching is so fast, but write anyway to test accuracy
+                zip: tree.nearestValue(lat, lng)
+            });
+            
+        }
+
+        i++;
+        if (i > 10) return false;
+    });
+
+    fs.writeFile('tmp-stations.json', JSON.stringify(stations));
+}
+
+/**
+ * Load zip codes from file and put them in a tree for fast searching
+ */
 function loadZipData(){
     var tree = new kd.KDTree(2);
     var data = fs.readFileSync("data/zips.csv", 'utf-8');
@@ -91,4 +153,5 @@ console.log( zip.nearest(37.828768, -122.350616) );
 console.log( zip.nearest(0, 0) );
 
 
-loadWeatherData(zip);
+//loadWeatherData(zip);
+createWeatherStationLookupFile(zip);
