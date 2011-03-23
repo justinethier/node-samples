@@ -10,30 +10,19 @@
  *
  * http://www.weather.gov/xml/current_obs/all_xml.zip
  *
- *
- *
- * TODO: need to integrate this with ZIP Code data ( http://zips.sourceforge.net/ )
- *       and a nearest neighbor search to tag each station with a zip code.
- *
- *       ideally it would be nice if there was a high-speed nearest neighbor
- *       algorithm we could tie into, written in either C or python.
- *       it would be nice to keep it in JS, but that might not be practical
- *       in terms of speed.
  */ 
 kd = require('kdtree');
 fs = require('fs');
 jQuery = require('jquery');
 
 /**
- * TODO: extract common code from the station=>file code, and 
- *       have this function load station data into a tree, 
- *       either using the file (probably faster) or the
- *       same process (if it is not too slow, but it probably will be)
+ *
  */
-function loadWeatherData(zipCodeTree){
+function loadWeatherData(){
     var i = 0;
-    var tree = new kd.KDTree(2);
-    var stations = {};
+    var stations = [];
+    var files = fs.readdirSync('data/tmp');
+    var weatherTree = new kd.KDTree(2);
 
     jQuery.each(files, function(index, filename){
         filename = 'data/tmp/' + filename;
@@ -48,31 +37,16 @@ function loadWeatherData(zipCodeTree){
                 longRe = new RegExp("<longitude>(.*)</longitude>"),
                 longAr = longRe.exec(data);
 
-// TODO: look up zip code and write to file
 
-            var dataRow = {
-                station : stationAr[1] || "",
-                location : (locAr != null && locAr.length > 1 ? locAr[1] : ""),
-                // TODO: filter out if null?
-                latitude :  (latAr != null && latAr.length > 1 ? latAr[1] : 0), 
-                longitude : (latAr != null && longAr.length > 1 ? longAr[1] : 0)
-    /*            station : jQuery("station_id", data).text(), 
-                location : jQuery("location", data).text(), 
-                suggested_pickup : jQuery("suggested_pickup", data).text(), 
-                suggested_pickup_period : jQuery("suggested_pickup_period", data).text(), 
-                latitude : jQuery("latitude", data).text(),
-                longitude : jQuery("longitude", data).text()*/
-            };
+            var lat = parseFloat( (latAr != null && latAr.length > 1 ? latAr[1] : 0) ), 
+                lng = parseFloat( (latAr != null && longAr.length > 1 ? longAr[1] : 0) ),
+                station = stationAr[1] || "";
 
-            tree.insert(dataRow.latitude, dataRow.longitude, dataRow.station);
-            
-            console.log(filename);
-            console.log(JSON.stringify(dataRow));
+            weatherTree.insert(lat, lng, station);
         }
-
-        i++;
-        if (i > 10) return false;
     });
+
+    return weatherTree;
 }
 
 /**
@@ -103,24 +77,17 @@ function createWeatherStationLookupFile(zipCodeTree){
             stations.push({
                 station : stationAr[1] || "",
                 location : (locAr != null && locAr.length > 1 ? locAr[1] : ""),
-                // TODO: filter out if null?
                 latitude : lat, 
                 longitude : lng,
-    /*            station : jQuery("station_id", data).text(), 
-                location : jQuery("location", data).text(), 
+                /*location : jQuery("location", data).text(), 
                 suggested_pickup : jQuery("suggested_pickup", data).text(), 
-                suggested_pickup_period : jQuery("suggested_pickup_period", data).text(), 
-                latitude : jQuery("latitude", data).text(),
-                longitude : jQuery("longitude", data).text()*/
+                suggested_pickup_period : jQuery("suggested_pickup_period", data).text(), */
 
                 // Do not need zip code because tree searching is so fast, but write anyway to test accuracy
                 zip: zipCodeTree.nearestValue(lat, lng)
             });
             
         }
-
-//        i++;
-//        if (i > 10) return false;
     });
 
     fs.writeFile('tmp-stations.json', JSON.stringify(stations));
@@ -133,6 +100,7 @@ function createWeatherStationLookupFile(zipCodeTree){
  */
 function loadZipData(){
     var tree = new kd.KDTree(2);
+    var dict = {};
     var data = fs.readFileSync("data/zips.csv", 'utf-8');
     var ary = data.split("\n");
     // for each
@@ -142,17 +110,17 @@ function loadZipData(){
             lng = parseFloat((line.split(",")[3]));
         if (!isNaN(lat) && !isNaN(lng)){
             tree.insert( lat, lng, line.split(",")[0]);
+            dict[line.split(",")[0]] = [lat, lng];
         }
     });
 
-    return tree;
+    return [tree, dict];
 }
-var zip = loadZipData();
-console.log( zip.nearestValue(39.183038, -76.668949) );
-console.log( zip.nearestValue(40.690596, -74.044762) );
-console.log( zip.nearestValue(37.828768, -122.350616) );
-console.log( zip.nearestValue(0, 0) );
+var zips = loadZipData()[1];
+var stations = loadWeatherData();
+//createWeatherStationLookupFile(zip);
 
+zipLocs = zips["01864"];
+console.log( stations.nearest( zipLocs[0], zipLocs[1]));
 
-//loadWeatherData(zip);
-createWeatherStationLookupFile(zip);
+// TODO: (free) web service to transform an arbitrary address into a lat/long (??)
